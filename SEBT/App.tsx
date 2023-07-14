@@ -11,6 +11,9 @@ function App() {
       source={{uri: 'http://bms.tracking.me/login'}}
       originWhitelist={['*']}
       ref={webviewRef}
+      javaScriptEnabled={true}
+      onLoad={() => console.log('WebView loaded')}
+      onError={error => console.log('WebView error:', error)}
     />
   );
 }
