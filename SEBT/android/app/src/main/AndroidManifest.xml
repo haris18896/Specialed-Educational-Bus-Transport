@@ -27,14 +27,34 @@
         </intent-filter>
       </activity>
 
-        <receiver
-                android:name=".BootReceiver"
-                android:enabled="true"
-                android:exported="true"
-                android:label="BootReceiver">
+<!--        <receiver android:name="com.sebt.BootReceiver"-->
+<!--                  android:exported="true"-->
+<!--                  android:enabled="true"-->
+<!--                  android:label="BootReceiver"-->
+<!--                  android:permission="android.permission.SYSTEM_ALERT_WINDOW">-->
+
+<!--            <intent-filter>-->
+<!--                <action android:name="android.intent.action.BOOT_COMPLETED" />-->
+<!--                <action android:name="android.intent.action.QUICKBOOT_POWERON" />-->
+<!--                <category android:name="android.intent.category.DEFAULT" />-->
+<!--            </intent-filter>-->
+<!--        </receiver>-->
+
+<!--        <receiver-->
+<!--                android:name=".BootReceiver"-->
+<!--                android:enabled="true"-->
+<!--                android:exported="true"-->
+<!--                android:label="BootReceiver">-->
+<!--            <intent-filter>-->
+<!--                <action android:name="android.intent.action.BOOT_COMPLETED" />-->
+<!--                <category android:name="android.intent.category.DEFAULT" />-->
+<!--            </intent-filter>-->
+<!--        </receiver>-->
+
+        <receiver android:name="com.sebt.BootReceiver" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
-                <category android:name="android.intent.category.DEFAULT" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
             </intent-filter>
         </receiver>
     </application>
