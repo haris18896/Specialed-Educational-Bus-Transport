@@ -8,7 +8,7 @@ function App() {
 
   return (
     <WebView
-      source={{uri: 'https://bms.tracking.me/login'}}
+      source={{uri: 'http://bms.tracking.me/login'}}
       originWhitelist={['*']}
       ref={webviewRef}
     />
