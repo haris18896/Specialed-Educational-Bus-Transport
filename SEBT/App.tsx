@@ -10,6 +10,9 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import {request, PERMISSIONS, RESULTS} from 'react-native-permissions';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const FIRST_TIME_INSTALL_KEY = 'first_time_install';
 
 async function requestOverlayPermission() {
   if (Platform.OS === 'android') {
@@ -17,9 +20,7 @@ async function requestOverlayPermission() {
       const permissionStatus = await request(
         PERMISSIONS.ANDROID.SYSTEM_ALERT_WINDOW,
       );
-      console.log('PERMISSIONS.ANDROID : ', PERMISSIONS.ANDROID);
-      console.log('permissionStatus : ', permissionStatus);
-      console.log('RESULTS.GRANTED : ', RESULTS.GRANTED);
+
       if (permissionStatus !== RESULTS.GRANTED) {
         console.log('permission is not granted');
         Alert.alert(
@@ -59,9 +60,23 @@ function Loader() {
 function App() {
   const [isLoading, setIsLoading] = useState(true);
 
-  // useEffect(() => {
-  //   requestOverlayPermission();
-  // }, []);
+  useEffect(() => {
+    async function checkFirstTimeInstall() {
+      try {
+        const isFirstTimeInstall = await AsyncStorage.getItem(
+          FIRST_TIME_INSTALL_KEY,
+        );
+        if (isFirstTimeInstall === null) {
+          await AsyncStorage.setItem(FIRST_TIME_INSTALL_KEY, 'false');
+          requestOverlayPermission();
+        }
+      } catch (error) {
+        console.warn('Error checking first time install:', error);
+      }
+    }
+
+    checkFirstTimeInstall();
+  }, []);
 
   const handleLoadStart = () => {
     setIsLoading(true);
