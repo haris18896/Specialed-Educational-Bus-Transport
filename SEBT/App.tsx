@@ -1,16 +1,26 @@
-import React, {useEffect} from 'react';
-import {Platform, Alert, Linking, StyleSheet} from 'react-native';
+import React, {useEffect, useState} from 'react';
 import {WebView} from 'react-native-webview';
-import * as Permissions from 'react-native-permissions';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-
-const FIRST_TIME_INSTALL_KEY = 'first_time_install';
+import {
+  Platform,
+  Alert,
+  Linking,
+  StyleSheet,
+  View,
+  Image,
+  ActivityIndicator,
+} from 'react-native';
+import {request, PERMISSIONS, RESULTS} from 'react-native-permissions';
 
 async function requestOverlayPermission() {
   if (Platform.OS === 'android') {
     try {
-      const permissionStatus = await Permissions.check('overlay');
-      if (permissionStatus !== 'granted') {
+      const permissionStatus = await request(
+        PERMISSIONS.ANDROID.SYSTEM_ALERT_WINDOW,
+      );
+      console.log('PERMISSIONS.ANDROID : ', PERMISSIONS.ANDROID);
+      console.log('permissionStatus : ', permissionStatus);
+      console.log('RESULTS.GRANTED : ', RESULTS.GRANTED);
+      if (permissionStatus !== RESULTS.GRANTED) {
         console.log('permission is not granted');
         Alert.alert(
           'Permission Required',
@@ -33,64 +43,70 @@ async function requestOverlayPermission() {
   }
 }
 
-async function checkFirstTimeInstall() {
-  try {
-    const isFirstTime = await AsyncStorage.getItem(FIRST_TIME_INSTALL_KEY);
-    if (!isFirstTime) {
-      // It's the first time, show the alert
-      AsyncStorage.setItem(FIRST_TIME_INSTALL_KEY, 'false');
-      // Call the permission request function
-      requestOverlayPermission();
-    }
-  } catch (err) {
-    console.warn('Error checking first-time install:', err);
-  }
+function Loader() {
+  return (
+    <View style={styles.loaderContainer}>
+      <Image source={require('./assets/logo.png')} style={styles.loaderImage} />
+      <ActivityIndicator
+        style={{marginTop: 10}}
+        size="large"
+        color={'#00ABBE'}
+      />
+    </View>
+  );
 }
 
 function App() {
-  useEffect(() => {
-    checkFirstTimeInstall();
-  }, []);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // useEffect(() => {
+  //   requestOverlayPermission();
+  // }, []);
+
+  const handleLoadStart = () => {
+    setIsLoading(true);
+  };
+
+  const handleLoadEnd = () => {
+    setIsLoading(false);
+  };
 
   return (
-    <WebView
-      source={{uri: 'http://bms.tracking.me/login'}}
-      originWhitelist={['*']}
-      style={{flex: 1}}
-      javaScriptEnabled={true}
-      domStorageEnabled={true}
-      useWebKit={true}
-      mixedContentMode="always"
-    />
+    <>
+      {isLoading && <Loader />}
+      <WebView
+        source={{uri: 'http://bms.tracking.me/login'}}
+        originWhitelist={['*']}
+        style={{flex: 1}}
+        javaScriptEnabled={true}
+        domStorageEnabled={true}
+        useWebKit={true}
+        mixedContentMode="always"
+        onLoadStart={handleLoadStart}
+        onLoadEnd={handleLoadEnd}
+      />
+    </>
   );
 }
 
 const styles = StyleSheet.create({
-  modalContainer: {
+  loaderContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#ffffff',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 100,
+    backgroundColor: 'rgba(255, 255, 255, 1)',
   },
-  modalText: {
-    fontSize: 18,
-    marginBottom: 20,
-    textAlign: 'center',
-    paddingHorizontal: 20,
-    color: 'black',
+  loaderImage: {
+    width: 100,
+    height: 100,
   },
-  button: {
-    backgroundColor: '#4287f5',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 5,
-    marginBottom: 10,
-  },
-  buttonText: {
-    color: '#ffffff',
-    fontSize: 16,
-    textAlign: 'center',
-  },
+  // ...
 });
 
 export default App;
