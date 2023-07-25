@@ -3,6 +3,7 @@ import {WebView} from 'react-native-webview';
 import {
   Platform,
   Alert,
+  Text,
   Linking,
   StyleSheet,
   View,
@@ -11,6 +12,7 @@ import {
 } from 'react-native';
 import {request, PERMISSIONS, RESULTS} from 'react-native-permissions';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import NetInfo from '@react-native-community/netinfo';
 
 const FIRST_TIME_INSTALL_KEY = 'first_time_install';
 
@@ -59,6 +61,7 @@ function Loader() {
 
 function App() {
   const [isLoading, setIsLoading] = useState(true);
+  const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {
     async function checkFirstTimeInstall() {
@@ -78,6 +81,22 @@ function App() {
     checkFirstTimeInstall();
   }, []);
 
+  useEffect(() => {
+    const unsubscribe = NetInfo.addEventListener(state => {
+      const offline = !(state.isConnected && state.isInternetReachable);
+      console.log('offline : ', offline);
+      setIsConnected(offline);
+    });
+
+    const interval = setInterval(() => {
+      unsubscribe();
+    }, 10000);
+
+    return () => {
+      clearInterval(interval);
+    };
+  }, [isConnected]);
+
   const handleLoadStart = () => {
     setIsLoading(true);
   };
@@ -88,23 +107,45 @@ function App() {
 
   return (
     <>
-      {isLoading && <Loader />}
-      <WebView
-        source={{uri: 'http://bms.tracking.me/login'}}
-        originWhitelist={['*']}
-        style={{flex: 1}}
-        javaScriptEnabled={true}
-        domStorageEnabled={true}
-        useWebKit={true}
-        mixedContentMode="always"
-        onLoadStart={handleLoadStart}
-        onLoadEnd={handleLoadEnd}
-      />
+      {!isConnected && isLoading && <Loader />}
+
+      {!isConnected ? (
+        <WebView
+          source={{uri: 'http://bms.tracking.me/login'}}
+          originWhitelist={['*']}
+          style={{flex: 1}}
+          javaScriptEnabled={true}
+          domStorageEnabled={true}
+          useWebKit={true}
+          mixedContentMode="always"
+          onLoadStart={handleLoadStart}
+          onLoadEnd={handleLoadEnd}
+        />
+      ) : (
+        <View style={styles.container}>
+          <Text style={styles.offline}>
+            Please connect to the Internet to continue
+          </Text>
+        </View>
+      )}
     </>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 20,
+  },
+  offline: {
+    color: 'black',
+    fontSize: 20,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
   loaderContainer: {
     flex: 1,
     justifyContent: 'center',
