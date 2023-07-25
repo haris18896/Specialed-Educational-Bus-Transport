@@ -24,7 +24,6 @@ async function requestOverlayPermission() {
       );
 
       if (permissionStatus !== RESULTS.GRANTED) {
-        console.log('permission is not granted');
         Alert.alert(
           'Permission Required',
           'Please enable the "Display over other apps" permission in the app settings to use this feature.',
@@ -62,6 +61,8 @@ function Loader() {
 function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [isConnected, setIsConnected] = useState(false);
+  const [showCounter, setShowCounter] = useState(true);
+  const [count, setCount] = useState(10);
 
   useEffect(() => {
     async function checkFirstTimeInstall() {
@@ -84,16 +85,26 @@ function App() {
   useEffect(() => {
     const unsubscribe = NetInfo.addEventListener(state => {
       const offline = !(state.isConnected && state.isInternetReachable);
-      console.log('offline : ', offline);
       setIsConnected(offline);
+      console.log('offlien', offline);
+      // Reset the counter to 10 when internet connectivity changes
+      if (offline) {
+        setCount(10);
+      }
     });
 
     const interval = setInterval(() => {
-      unsubscribe();
+      setCount(prevCount => prevCount - 1);
+    }, 1000);
+
+    // Hide the counter after 10 seconds and show the message if count reaches 0
+    setTimeout(() => {
+      setShowCounter(false);
     }, 10000);
 
     return () => {
       clearInterval(interval);
+      unsubscribe();
     };
   }, [isConnected]);
 
@@ -123,9 +134,27 @@ function App() {
         />
       ) : (
         <View style={styles.container}>
-          <Text style={styles.offline}>
-            Please connect to the Internet to continue
-          </Text>
+          {count <= 0 ? (
+            <View style={styles.container}>
+              <Image
+                style={styles.noInternetImage}
+                source={require('./assets/NoInternet.png')}
+              />
+              <Text style={styles.offline}>
+                Please connect to the Internet to continue
+              </Text>
+            </View>
+          ) : (
+            <View style={styles.container}>
+              <Image
+                style={styles.noInternetImage}
+                source={require('./assets/NoInternet.png')}
+              />
+              <Text style={styles.offline}>
+                Retry connecting in {count} seconds
+              </Text>
+            </View>
+          )}
         </View>
       )}
     </>
@@ -145,6 +174,10 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     textAlign: 'center',
+  },
+  noInternetImage: {
+    width: 200,
+    height: 200,
   },
   loaderContainer: {
     flex: 1,
